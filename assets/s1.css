@@ -1,0 +1,248 @@
+/* Table of contents
+––––––––––––––––––––––––––––––––––––––––––––––––––
+- Plotly.js
+- Grid
+- Base Styles
+- Code - (Container)
+- Asset formating
+*/
+
+/* Grid
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.container {
+  width: 100%;
+  max-width: 100vw;
+  /*margin: 0 auto;*/
+  /*margin-right: 4%;*/
+  padding: 0 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.DateInput, .DateInput_1 {
+    width: 400%;
+    max-width: 48.5vw;
+  }
+
+.column,
+.columns {
+  width: 100%;
+  float: left;
+  box-sizing: border-box; }
+
+/* For devices larger than 400px */
+@media (min-width: 400px) {
+  .container {
+    width: 85%;
+    padding: 0; }
+}
+/* For devices larger than 550px */
+@media (min-width: 550px) {
+  .center_container {
+    width: 80%;
+  }
+  .column,
+  .columns {
+    margin-left: 4%; }
+  .column:first-child,
+  .columns:first-child {
+    margin-left: 0; }
+
+  .one.column,
+  .one.columns                    { width: 4.66666666667%; }
+  .two.columns                    { width: 13.3333333333%; }
+  .three.columns                  { width: 22%;            }
+  .four.columns                   { width: 30.6666666667%; }
+  .five.columns                   { width: 39.3333333333%; }
+  .six.columns                    { width: 48%;            }
+  .seven.columns                  { width: 56.6666666667%; }
+  .eight.columns                  { width: 65.3333333333%; }
+  .nine.columns                   { width: 74.0%;          }
+  .ten.columns                    { width: 82.6666666667%; }
+  .eleven.columns                 { width: 91.3333333333%; }
+  .twelve.columns                 { width: 98%; margin-left: 0; margin-right: 0;}
+
+  .one-third.column               { width: 30.6666666667%; }
+  .two-thirds.column              { width: 65.3333333333%; }
+
+  .one-half.column                { width: 48%; }
+
+  /* Offsets */
+  .offset-by-one.column,
+  .offset-by-one.columns          { margin-left: 8.66666666667%; }
+  .offset-by-two.column,
+  .offset-by-two.columns          { margin-left: 17.3333333333%; }
+  .offset-by-three.column,
+  .offset-by-three.columns        { margin-left: 26%;            }
+  .offset-by-four.column,
+  .offset-by-four.columns         { margin-left: 34.6666666667%; }
+  .offset-by-five.column,
+  .offset-by-five.columns         { margin-left: 43.3333333333%; }
+  .offset-by-six.column,
+  .offset-by-six.columns          { margin-left: 52%;            }
+  .offset-by-seven.column,
+  .offset-by-seven.columns        { margin-left: 60.6666666667%; }
+  .offset-by-eight.column,
+  .offset-by-eight.columns        { margin-left: 69.3333333333%; }
+  .offset-by-nine.column,
+  .offset-by-nine.columns         { margin-left: 78.0%;          }
+  .offset-by-ten.column,
+  .offset-by-ten.columns          { margin-left: 86.6666666667%; }
+  .offset-by-eleven.column,
+  .offset-by-eleven.columns       { margin-left: 95.3333333333%; }
+
+  .offset-by-one-third.column,
+  .offset-by-one-third.columns    { margin-left: 34.6666666667%; }
+  .offset-by-two-thirds.column,
+  .offset-by-two-thirds.columns   { margin-left: 69.3333333333%; }
+
+  .offset-by-one-half.column,
+  .offset-by-one-half.columns     { margin-left: 52%; }
+}
+/* Base Styles
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+html {
+  font-size: 62.5%; }
+body {
+  font-size: 1.5em;
+  line-height: 1.6;
+  font-weight: 400;
+  font-family: "Open Sans", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: #5a5a5a !important;
+}
+
+.navbar {
+  background-color: #BEAFC2 !important;
+}
+
+.bg-primary {
+background-color: #695E93 !important;
+}
+.bg-secondary {
+background-color: #b5b5bd !important;
+}
+.bg-warning {
+background-color: #5c2d91 !important;
+}
+
+/* Forms
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+input[type="text"],
+select {
+  height: 35px;
+  max-width: 100%;
+  /*width: 740px;*/
+  width: 100%;
+
+  padding: 6px 10px;
+  background-color: #fff;
+  border: 1px solid #D1D1D1;
+  border-radius: 4px;
+  box-shadow: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: inherit;
+  border: 1px;}
+
+.SingleDatePickerInput {border: 1px;}
+
+  /* Fix box width of datepicker to be 100% of parent container*/
+.DateInput, .DateInput_1 {
+border-radius: 5px !important;
+}
+
+/* Fix the font size and other stuff of datepicker*/
+.DateInput_input, .DateInput_input_1 {
+  text-align: center;
+  line-height: calc(1.5em + 0.75rem);
+  height: calc(1.5em + 0.75rem + 2px);
+  font-size:1rem;
+  font-weight: 400;
+  color: #000000;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: inherit;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Larger than mobile */
+@media (min-width: 400px) {}
+
+/* Larger than phablet (also point when grid becomes active) */
+@media (min-width: 550px) {}
+
+/* Larger than tablet */
+@media (min-width: 750px) {}
+
+/* Larger than desktop */
+@media (min-width: 1000px) {}
+
+/* Larger than Desktop HD */
+@media (min-width: 1200px) {}
+
+/* Pretty container–––––––––––(This CSS portion onward was utilized from the "Dash-World-Cell-Towers Dashboard)
+@https://github.com/plotly/dash-world-cell-towers/tree/master/dash_opencellid/assets */
+.pretty_container {
+  border-radius: 5px;
+  background-color: #f3f3f1;  /* Mapbox light map land color */
+  margin: 1%;
+  padding: 1%;
+  position: relative;
+  box-shadow: 1px 1px 1px slategrey;
+}
+
+.container_title {
+  margin-top: 0;
+  margin-bottom: 0.2em;
+  font-size: 2.6rem;
+  line-height: 2.6rem;
+  color: black;
+}
+
+.info-icon {
+  float: right;
+  cursor: pointer;
+  height: 2.2rem;
+  width: 2.2rem;
+  margin: 0.2rem;
+}
+
+
+/* Modal info layer
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.modal {
+    position: fixed;
+    z-index: 1002; /* Sit on top, including modebar which has z=1001 */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background-color: rgba(0, 0, 0, 0.6); /* Black w/ opacity */
+}
+
+.modal-content {
+    z-index: 1004; /* Sit on top, including modebar which has z=1001 */
+    position: fixed;
+    left: 0;
+    width: 60%;
+    background-color: #5c2d91;  /* Material indigo 600 */
+    color: white;
+    border-radius: 5px;
+    margin-left: 20%;
+    margin-bottom: 2%;
+    margin-top: 2%;
+}
+
+.modal-content > div {
+    text-align: left;
+    margin: 15px;
+}
+
+.modal-content.bottom {
+    bottom: 0;
+}
+
+.modal-content.top {
+    top: 0;
+}
