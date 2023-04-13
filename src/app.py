@@ -20,7 +20,7 @@ from textwrap import dedent
 import plotly.graph_objects as go
 #from apscheduler.schedulers.background import BackgroundScheduler
 #from apscheduler.schedulers.blocking import BlockingScheduler
-from flask_apscheduler import APScheduler
+#from flask_apscheduler import APScheduler
 
 #from Capstone import forecast
 
