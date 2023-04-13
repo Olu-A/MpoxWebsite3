@@ -17,84 +17,143 @@ from datetime import date
 from pycountry_convert import country_name_to_country_alpha3
 from dash import State
 from textwrap import dedent
+import plotly.graph_objects as go
+#from apscheduler.schedulers.background import BackgroundScheduler
+#from apscheduler.schedulers.blocking import BlockingScheduler
+from flask_apscheduler import APScheduler
+
 #from Capstone import forecast
 
-#app = dash.Dash(external_stylesheets = [ dbc.themes.FLATLY],)
-app = dash.Dash(__name__,external_stylesheets = [ dbc.themes.SOLAR], title='Mpox', update_title=None)
+app = dash.Dash(__name__,external_stylesheets = [ dbc.themes.SOLAR], title='Mpox', update_title=None, meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}])
 server = app.server
 
 #png
 MPOX_IMG = "https://ichef.bbci.co.uk/news/976/cpsprodpb/183FD/production/_124852399_hi067948842-1.jpg"
-Forcast_IMG = "https://user-images.githubusercontent.com/60261890/220716415-f797d5c1-747f-481c-abff-be3973b043f7.png"
-
 colors = {'background': '#2D2D2D','text': '#E1E2E5','figure_text': '#ffffff','confirmed_text':'#3CA4FF','deaths_text':'#f44336','recovered_text':'#5A9E6F','highest_case_bg':'#393939',}
 forecast = pd.read_csv('forecast.csv')
-#if forecast[0] = "line number";
-#    del forecast[forecast.columns[0]]
+Cdata = pd.read_csv('Cdata.csv')
 Fdata = forecast.set_index('ds')
-Rdata0 = pd.read_csv('Rdata.csv')
-Rdata = Rdata0.set_index('date')
-Gdata = pd.read_csv('Gdata.csv')
+"""
+sched = APScheduler()
+
+def my_job():
+    id='my_job'
+    print('Finished')
+    import Capstone.py
+
+#Probably set to 30 minutes
+job = sched.add_job(func = my_job, trigger = 'interval', id='my_job', seconds = 10, replace_existing=True)
+#job = sched.add_job(func = my_job, trigger = 'cron', id='my_job', hour=24, replace_existing=True, args=['job executed!!!!'])
+
+sched.start()
+"""
+"""
+while True:
+        sleep(1)
+"""
+tday = date.today()
+c0 = tday + timedelta(14)
+C0 = c0.strftime("%Y-%m-%d")
+
 
 Start = forecast['ds'].iloc[1]
 End = forecast['ds'].iloc[-2]
+if End > C0:
+    End = C0
 
-df = pd.read_csv('pred_dates.csv')
-df1 = df.T
-df2 = df.set_index('Year').T
-Sdata = df2.loc[:,['1/1/2022','1/1/2023','1/1/2024']]
-
-tday = date.today()
-#T1 = tday.strftime("%#m/%#d/%y")
-T1 = tday.strftime("%Y-%m-%d")
+#TEMP ISE5 Stuff
 c1 = tday - timedelta(1)
+c2 = tday - timedelta(0)
 c3 = tday + timedelta(1)
-#Y1 = c1.strftime("%#m/%#d/%y")
 Y1 = c1.strftime("%Y-%m-%d")
-#N1 = c3.strftime("%#m/%#d/%Y")
+T1 = c2.strftime("%Y-%m-%d")
 N1 = c3.strftime("%Y-%m-%d")
-
-#Fdata1 = pd.DataFrame.from_dict(Fdata)
-#Fdata1.to_csv('forecast2.csv')
-
-yesterday = round(Fdata.loc[Y1, 'yhat'],2)
-today = round(Fdata.loc[T1].at['yhat'],2)
-tommorow = round(Fdata.loc[N1].at['yhat'],2)
 #################################   Functions for creating Plotly graphs and data card contents ################
+Y2= c1.strftime("%#m/%#d/%Y")
+T2= c2.strftime("%#m/%#d/%Y")
+N2= c3.strftime("%#m/%#d/%Y")
 
-def get_continent(Sdata):
+def get_continent(Cdata):
     try:
-        a3code =  country_name_to_country_alpha3(Sdata)
+        a3code =  country_name_to_country_alpha3(Cdata)
     except:
         a3code = 'Unknown'
     return (a3code)
 
-Sdata ['Countries'] = Sdata.index
-Sdata ['Codes'] = Sdata ['Countries'].apply(get_continent)
-Sdata['Country Code'] = Sdata ['Codes'].apply(lambda x: x[0] + x[1] + x[2])
-Sdata.drop('Codes',axis = 1, inplace = True)
+#Lines 83 to 91 need to be put into a callback
+Cdata1 = pd.DataFrame()
+Cdata1 ['date'] = Cdata ['date']
+Cdata1 ['Countries'] = Cdata ['location']
+Cdata1 ['Cases'] = Cdata ['new_cases_smoothed']
+Cdata1 ['Codes'] = Cdata1 ['Countries'].apply(get_continent)
+Cdata1['Country Code'] = Cdata1 ['Codes'].apply(lambda x: x[0] + x[1] + x[2])
+Cdata1 = Cdata1.set_index('date')
+Cdata1 = Cdata1[Cdata1['Country Code'] !="Unk"]
+Cdata1.drop('Codes',axis = 1, inplace = True)
+#Cdata1.to_csv('Cdata2.csv')
+Sdata = Cdata1[Cdata1.index == T1]
+Sdata2 = Cdata1.loc[Cdata1['Countries'] == "United States"]
+"""
+yesterday = round(Sdata2.loc[Y2].at['Cases'],2)
+today = round(Sdata2.loc[T2].at['Cases'],2)
+tommorow = round(Sdata2.loc[N2].at['Cases'],2)
+"""
+yesterday = round(Fdata.loc[Y1, 'yhat'],2)
+today = round(Fdata.loc[T1].at['yhat'],2)
+tommorow = round(Fdata.loc[N1].at['yhat'],2)
 
-Sdata2 = {}
-Sdata2 ['Countries'] = Sdata ['Countries']
-Sdata2['current_year'] = Sdata['1/1/2023']
-Sdata2['Country Code'] = Sdata['Country Code']
+row_heights = [350]
+template = {"layout": {"paper_bgcolor": "f3f3f1", "plot_bgcolor": "f3f3f1"}}
 
-def world_map(Sdata2):
-    fig = px.choropleth(Sdata2, locations='Country Code', locationmode = 'ISO-3',color = 'current_year',
+def blank_fig(height):
+    """
+    Build blank figure with the requested height
+    """
+    return {
+        "data": [],
+        "layout": {
+            "height": height,
+            "template": template,
+            "xaxis": {"visible": False},
+            "yaxis": {"visible": False},
+        },
+    }
+
+def world_map(Sdata):
+    fig1 = px.choropleth(Sdata, locations='Country Code', locationmode = 'ISO-3',color = 'Cases',
                         hover_data = ['Countries'],
                         projection="orthographic",
                         #color_continuous_scale=px.colors.sequential.Oranges,
                         color_continuous_scale=px.colors.sequential.BuPu,
-                        range_color=(0, 20),
-                        labels = {"Cases": "Reported Cases"},)
+                        range_color=(0, 5),
+                        labels = {"Cases": "Reported Cases"})
+    fig1.update_layout(coloraxis_colorbar_title_text = " # Reported Cases")
+    fig1.update_layout(height=350, margin={"r":0,"t":0,"l":0,"b":0})
+    fig1.update_geos(projection_scale = 0.90,)
+    return(fig1)
 
-    fig.update_layout(title_text = "Global cases", coloraxis_colorbar_title_text = " # Reported Cases", margin = dict(l=0,r=0,t=0,b=0),
-    geo=dict(bgcolor = "rgb(255,255,255)"),
-    autosize = False,
-    width =600,
-    height=350)
-    fig.update_geos(projection_scale = 0.90,)
-    return fig
+date =Sdata2.index
+Cases =Sdata2['Cases']
+
+#Sdata2.to_csv('Sdata2.csv')
+def trend_line(Sdata2):
+    fig2 = go.Figure()
+    fig2.add_trace(go.Scatter(x = date, y = Cases))
+    #fig2.update_layout(title_text="Time series with range slider and selectors")
+    fig2.update_layout(
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1, label="1month", step="month", stepmode="backward"),
+                    dict(count=6, label="6months", step="month", stepmode="backward"),
+                    #dict(count=1, label="1year", step="year", stepmode="backward"),
+                    dict(step="all")
+                ])
+            ),
+            rangeslider=dict(visible=True),type="date"
+        ),height=350
+    )
+    return(fig2)
 
 #WORKING
 def data_for_cases(header, total_cases):
@@ -107,19 +166,16 @@ def data_for_cases(header, total_cases):
 
     return card_content
 
-card_body1 = dbc.Col(dbc.Card(data_for_cases("Yesterday",f'{yesterday:,}'), color="primary", id="card_data1", style = {'text-align':'center'}, inverse = True),
+card_body1 = dbc.Col(dbc.Card(data_for_cases("Yesterday",f'{yesterday:,}' ' cases'), color="primary", id="card_data1", style = {'text-align':'center'}, inverse = True),
 xs = 12, sm = 12, md = 4, lg = 4, xl = 4, style = {'padding':'12px 12px 12px 12px'})
-card_body2 = dbc.Col(dbc.Card(data_for_cases("Today",f'{today:,}'), color="secondary", id="card_data2", style = {'text-align':'center'}, inverse = True),
+card_body2 = dbc.Col(dbc.Card(data_for_cases("Today",f'{today:,}' ' cases'), color="secondary", id="card_data2", style = {'text-align':'center'}, inverse = True),
 xs = 12, sm = 12, md = 4, lg = 4, xl = 4, style = {'padding':'12px 12px 12px 12px'})
-card_body3 = dbc.Col(dbc.Card(data_for_cases("Tommorow",f'{tommorow:,}'), color = 'warning', id="card_data3", style = {'text-align':'center'}, inverse = True),
+card_body3 = dbc.Col(dbc.Card(data_for_cases("Tommorow",f'{tommorow:,}' ' cases'), color = 'warning', id="card_data3", style = {'text-align':'center'}, inverse = True),
 xs = 12, sm = 12, md = 4, lg = 4, xl = 4, style = {'padding':'12px 12px 12px 12px'})
 
 def build_modal_info_overlay(id, side, content):
-    """
-    Build div representing the info overlay for a plot panel
-    """
-    div = html.Div([  # modal div
-            html.Div([  # content div
+    div = html.Div([
+            html.Div([
                 html.Div([html.H4(["Info",html.Img(id=f"close-{id}-modal",src="assets/times-circle-solid.svg",
                 n_clicks=0,className="info-icon",style={"margin": 0},),],className="container_title",
                 style={"color": "white"},),
@@ -132,15 +188,14 @@ body_app = dbc.Container( id = 'body_app', children = [
     #dbc.Row(html.Marquee("Mpox Model Last Updated: 2/14/22"), style = {'color':'green'}),
 
     html.Br(),
-    #[dbc.Alert([html.I(id='Broken_dropdown', className="bi bi-info-circle-fill me-2"),"An example info alert with an icon",],is_open=False, color="info",className="d-flex align-items-center",)],
+
     dbc.Row(
     [
         dbc.Col(
             html.Div(
-            #[dbc.Alert([html.I(id='Broken_dropdown', className="bi bi-info-circle-fill me-2"),"An example info alert with an icon",],is_open=False, color="info",className="d-flex align-items-center",),
-            [dcc.ConfirmDialog(id='Broken_dropdown', message='This version of the website only supports The Country input United States'),
+            [dcc.ConfirmDialog(id='Broken', message='This prototype website only supports The Country input United States'),
              dcc.Dropdown(id = 'country-dropdown',
-                options = [{'label':i, 'value': i} for i in np.append(['All'],Gdata ['Countries'].unique()) ],
+                options = [{'label':i, 'value': i} for i in np.append(['All'],Cdata1 ['Countries'].unique()) ],
                 value = 'United States',
                 #disabled=True
                 )]),
@@ -168,28 +223,52 @@ body_app = dbc.Container( id = 'body_app', children = [
 
     html.Br(),
 
-    dbc.Row([html.Div(html.H4('Global Impact of Mpox',className="container_title"),
+    dbc.Row([html.Div(html.H4('Global Impact of Mpox',className="banner1"),
                       style = {'color':'white','textAlign':'center','fontWeight':'bold','family':'georgia','width':'100%'})]),
 
     html.Br(),
 
-    dbc.Row([
+    html.Div([
         html.Div(children =[build_modal_info_overlay("graph-info","bottom",dedent("""
         This interactive globe shows the # of reported cases in each country based on a color gradient
-        scale. Feel free to move the globe to see the number of reported cases in each country. Countries
+        scale. The globe can be moved to see the number of reported cases in each country. Countries
         with a gray color do not have a clear value of reported cases and are not included in the data
-        that we pulled information from""")),
-            build_modal_info_overlay("graphic-info","bottom",dedent("""
-            The following is a trendline for data based on other countries for the next 14 days""")),
-            html.Div(dbc.Col(children=[
-                html.H4(["Reported Cases by year",html.Img(id="show-graph-info-modal",src="assets/question-circle-solid.svg",className="info-icon")],className="container_title"),
-                dcc.Graph(id = 'world-graph', figure = world_map(Sdata2))],style = {'height':'400px', 'width':"625px", "margin-right": "4",},xs = 12, sm = 12, md = 6, lg = 6, xl = 6,className="six columns pretty_container"), id="graph-info-div",className='container'),
-                #Verticalbreak
-            html.Div(dbc.Col(children=[
-                html.H4(["Prediction model trend",html.Img(id="show-graphic-info-modal",src="assets/question-circle-solid.svg",className="info-icon")],className="container_title"),
-                html.Img(src = Forcast_IMG, height = "350px", width = "605px")],style = {'height':'400px', 'width':"625px", "margin-left": "4",},xs = 12, sm = 12, md = 6, lg = 6, xl = 6,className="six columns pretty_container"), id="graphic-info-div",className='container'),
-        ],),
+        that we pulled information from, hovering over most countries will give more information on the
+        number of cases (Data on the globe only works for past dates)""")),
+        build_modal_info_overlay("graphic-info","bottom",dedent("""
+        This graph displays the amount of Mpox cases within a specified country from the first recorded cases
+        up to our models predicted cases 2 weeks in the future. The tabs can be used to show the total number
+        of cases in the time span selected including predicted cases. Also, the small graph underneath it can
+        be used to manually observe the trends of Mpox over the recorded period.""")),
+            html.Div(children=[html.Div(children=[
+                html.H4(["Interactive Globe",html.Img(id="show-graph-info-modal",src="assets/question-circle-solid.svg",className="info-icon")],className="container_title2"),
+                 dcc.Loading(dcc.Graph(id = 'world-graph', figure = world_map(Sdata),config={"displayModeBar": False}),style = {'height':'400px', 'width':"100%"})], id="graph-info-div",className="six columns pretty_container"),
+                 #style = {'height':'400px', 'width':"625px"},
+            html.Div(children=[
+                html.H4(["Mpox Cases Trend",html.Img(id="show-graphic-info-modal",src="assets/question-circle-solid.svg",className="info-icon")],className="container_title2"),
+                dcc.Loading(dcc.Graph(id = 'trend-graph', figure = trend_line(Sdata2),config={"displayModeBar": False}),style = {'height':'400px', 'width':"625px"})], id="graphic-info-div",className="six columns pretty_container"),
+                #style = {'height':'400px', 'width':"625px"},
+                #figure=blank_fig(row_heights[0])
+            ]),
+        ])
     ]),
+
+#    html.Div([
+#        html.Div(children =[build_modal_info_overlay("blank1-info","bottom",dedent(""Stuff1")),
+#                            build_modal_info_overlay("blank2-info","bottom",dedent(""Stuff2")),
+#                            build_modal_info_overlay("blank3-info","bottom",dedent(""Stuff3")),
+#            html.Div(children=[html.Div(children=[
+#                html.H4(["Blank 1",html.Img(id="show-Blank1-info-modal",src="assets/question-circle-solid.svg",className="info-icon")],className="container_title2"),
+#                 dcc.Loading(dcc.Graph(id = 'blank1-graph', figure = blank_fig(row_heights[0]), config={"displayModeBar": False}),style = {'height':'400px', 'width':"100%"})], id="blank1-info-div",className="four columns pretty_container"),
+#            html.Div(children=[
+#                html.H4(["Blank 2",html.Img(id="show-Blank2-info-modal",src="assets/question-circle-solid.svg",className="info-icon")],className="container_title2"),
+#                dcc.Loading(dcc.Graph(id = 'blank2-graph', figure =  blank_fig(row_heights[0]), config={"displayModeBar": False}),style = {'height':'400px', 'width':"625px"})], id="blank2-info-div",className="four columns pretty_container"),
+#            html.Div(children=[
+#                html.H4(["Blank 3",html.Img(id="show-Blank3-info-modal",src="assets/question-circle-solid.svg",className="info-icon")],className="container_title2"),
+#                dcc.Loading(dcc.Graph(id = 'blank3-graph', figure =  blank_fig(row_heights[0]), config={"displayModeBar": False}),style = {'height':'400px', 'width':"625px"})], id="blank3-info-div",className="four columns pretty_container"),
+#            ]),
+#        ])
+#    ]),
 
 
     html.Br(),
@@ -223,6 +302,23 @@ body_app = dbc.Container( id = 'body_app', children = [
 
     ],fluid = True,)
 ############################## navigation bar ################################
+content = """The purpose of this website is to offer the user an international prediction model for Mpox
+cases. All data is accessed thorugh a combination of the country and date inputs. The website will output
+on default the number of reported cases one day before your selected day, the number of cases on your
+selected date, and the number of predicted cases one day after your selected date."""
+
+startup = html.Div([html.Div([
+        html.Div([html.H4(["Info",html.Img(id=f"close-basic-modal",src="assets/times-circle-solid.svg",
+        n_clicks=0,className="info-icon",style={"margin": 0},),],className="container_title",
+        style={"color": "white"},),
+        dcc.Markdown(content),])],className=f"modal-content top",),
+        html.Div(className="modal")],id=f"basic-modal",style={"display": "block"})
+        #html.Div(className="modal"),],id=f"basic-modal",style={"display": "none"},)
+        #])
+
+
+#startup = html.Div(children = build_modal_info_overlay("basic","top",dedent("""Basic info"""))),
+
 navbar = dbc.Navbar( id = 'navbar', children = [
 
 
@@ -230,7 +326,7 @@ navbar = dbc.Navbar( id = 'navbar', children = [
     dbc.Row([
         dbc.Col(html.Img(src = MPOX_IMG, height = "70px")),
         dbc.Col(
-            dbc.NavbarBrand("Mpox Live Tracker", style = {'color':'black', 'fontSize':'25px','fontFamily':'Times New Roman'}
+            dbc.NavbarBrand("Mpox Live Tracker", style = {'color':'black', 'fontSize':'25px','fontFamily':'Impact'}
     ))],
     align = "center",),href = '/'
     ),
@@ -238,27 +334,20 @@ navbar = dbc.Navbar( id = 'navbar', children = [
     dbc.Row([
         #dbc.Col(dbc.Button(id = 'button', children = "Github", color = "warning", className = 'ms-2', href = 'https://github.com/Mpox-Predictor/Mpox-Code')),
 
-        html.Div(children =[build_modal_info_overlay("general","top",dedent("""
-        The purpose of this website is to offer the user an international prediction model for Mpox
-        cases. Please select a country and date as the two major inputs. The website will then output
-        the number of past historical cases one day before your selected day, the # of cases on your
-        selected date, and the # of future predicted cases one day after your selected date.""")),
+        html.Div(children =[build_modal_info_overlay("general","top",dedent(
+        """The purpose of this website is to offer the user an international prediction model for Mpox
+        cases. All data is accessed thorugh a combination of the country and date inputs. The website will output
+        on default the number of reported cases one day before your selected day, the number of cases on your
+        selected date, and the number of predicted cases one day after your selected date.""")),
         html.Div(html.H4(["Info",html.Img(id="show-general-modal",src="assets/question-circle-solid.svg",className="info-icon")],className="container_title"),
         id="general-div")]),
     ],className="g-0 ms-auto flex-nowrap mt-3 mt-md-0")
 ])
 
-# Define the HTML structure of your index.html file
-#index_html = html.Div(id = 'parent', children = [navbar,body_app])
+#interval =  html.Div([dcc.Interval(id='trigger', interval=3, n_intervals=0)])
 
-# Write the HTML to a file
-#with open('index.html', 'w') as f:
-#    f.write(index_html.to_html())
-
-
-
-
-app.layout = html.Div(id = 'parent', children = [navbar,body_app])
+app.layout = html.Div(id = 'parent', children = [navbar,body_app,startup])
+#dcc.Interval(id="trigger", interval=86400),
 #app.layout = dcc.Iframe(src='https://www.Mpox123.com', width='100%', height='500', Web)
 
 #################################### Callback for adding interactivity to the dashboard #######################
@@ -267,32 +356,111 @@ app.layout = html.Div(id = 'parent', children = [navbar,body_app])
                [
                 Output('card_data1','children'),
                 Output('card_data2','children'),
-                Output('card_data3','children')
+                Output('card_data3','children'),
                ],
+              Input(component_id = 'calender_dropdown', component_property = 'date'),
+              Input(component_id = 'country-dropdown', component_property = 'value'),
+              prevent_initial_call=True
+              )
+
+def update_cards1(value1, value2):
+    try:
+        date_object = datetime.fromisoformat(value1)
+    except UnboundLocalError:
+        date_object =  tday
+
+    c1 = date_object - timedelta(1)
+    c2 = date_object - timedelta(0)
+    c3 = date_object + timedelta(1)
+    card_value1 = c1.strftime(("%Y-%m-%d"))
+    card_value2 = c2.strftime(("%Y-%m-%d"))
+    card_value3 = c3.strftime(("%Y-%m-%d"))
+
+#card_value3 = c3.strftime(("%#m/%#d/%Y"))
+    Sdata0 = Cdata1.loc[Cdata1['Countries'] == value2]
+
+    if value2 == "United States":
+        card_value1 = c1.strftime(("%Y-%m-%d"))
+        card_value2 = c2.strftime(("%Y-%m-%d"))
+        card_value3 = c3.strftime(("%Y-%m-%d"))
+        dayBefore =  round(Fdata.loc[card_value1].at['yhat'],2)
+        thisDay =  round(Fdata.loc[card_value2].at['yhat'],2)
+        dayAfter =  round(Fdata.loc[card_value3].at['yhat'],2)
+
+
+    else:
+        try:
+            dayBefore =  round(Sdata0.loc[card_value1].at ['Cases'],2)
+        except KeyError:
+            dayBefore =  round(0,2)
+        try:
+            thisDay =  round(Sdata0.loc[card_value2].at ['Cases'],2)
+        except KeyError:
+            thisDay =  round(0,2)
+        try:
+            dayAfter =  round(Sdata0.loc[card_value3].at ['Cases'],2)
+        except KeyError:
+            dayAfter =  round(0,2)
+
+    card_body1 = dbc.Card(data_for_cases(card_value1,f'{dayBefore:,}' ' cases'), color="primary", style = {'text-align':'center'}, inverse = True)
+    card_body2 = dbc.Card(data_for_cases(card_value2,f'{thisDay:,}' ' cases'), color="secondary",style = {'text-align':'center'}, inverse = True)
+    card_body3 = dbc.Card(data_for_cases(card_value3,f'{dayAfter:,}' ' cases'), color = 'warning',style = {'text-align':'center'}, inverse = True)
+
+    return (card_body1, card_body2, card_body3)
+
+@app.callback(
+               Output('world-graph','figure'),
               Input(component_id = 'calender_dropdown', component_property = 'date'),
               prevent_initial_call=True
               )
 
-def update_cards(value):
-    date_object = date.fromisoformat(value)
-    #card_value2 = date_object.strftime("%#m/%#d/%Y")
-    card_value2 = date_object.strftime(("%Y-%m-%d"))
-    c1 = date_object - timedelta(1)
-    c3 = date_object + timedelta(1)
-    #card_value1 = c1.strftime("%#m/%#d/%Y")
-    card_value1 = c1.strftime(("%Y-%m-%d"))
-    #card_value3 = c3.strftime("%#m/%#d/%Y")
-    card_value3 = c3.strftime(("%Y-%m-%d"))
+def graph1(value1):
+    date_object = datetime.fromisoformat(value1)
+    c = date_object + timedelta(0)
+    date = c.strftime("%Y-%m-%d")
+    Sdata = Cdata1.loc[Cdata1.index == date]
 
-    dayBefore =  round(Fdata.loc[card_value1].at['yhat'],2)
-    thisDay =  round(Fdata.loc[card_value2].at['yhat'],2)
-    dayAfter =  round(Fdata.loc[card_value3].at['yhat'],2)
+    fig1 = px.choropleth(Sdata, locations='Country Code', locationmode = 'ISO-3',color = 'Cases',
+                        hover_data = ['Countries'],
+                        projection="orthographic",
+                        #color_continuous_scale=px.colors.sequential.Oranges,
+                        color_continuous_scale=px.colors.sequential.BuPu,
+                        range_color=(0, 5),
+                        labels = {"Cases": "Reported Cases"})
+    fig1.update_layout(coloraxis_colorbar_title_text = " # Reported Cases")
+    fig1.update_layout(height=350, margin={"r":0,"t":0,"l":0,"b":0})
+    fig1.update_geos(projection_scale = 0.90,)
+    return(fig1)
 
-    card_body1 = dbc.Card(data_for_cases(card_value1,f'{dayBefore:,}'), color="primary", style = {'text-align':'center'}, inverse = True)
-    card_body2 = dbc.Card(data_for_cases(card_value2,f'{thisDay:,}'), color="secondary",style = {'text-align':'center'}, inverse = True)
-    card_body3 = dbc.Card(data_for_cases(card_value3,f'{dayAfter:,}'), color = 'warning',style = {'text-align':'center'}, inverse = True)
 
-    return (card_body1, card_body2, card_body3)
+@app.callback(
+               Output('trend-graph','figure'),
+              Input(component_id = 'country-dropdown', component_property = 'value'),
+              prevent_initial_call=True
+              )
+def graph2(value2):
+    Sdata1 = Cdata1.loc[Cdata1['Countries'] == value2]
+
+    date =Sdata1.index
+    Cases =Sdata1['Cases']
+
+    fig2 = go.Figure()
+    fig2.add_trace(go.Scatter(x=date, y=Cases))
+    #fig2.update_layout(title_text="Time series with range slider and selectors")
+    fig2.update_layout(
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1, label="1month", step="month", stepmode="backward"),
+                    dict(count=6, label="6months", step="month", stepmode="backward"),
+                    #dict(count=1, label="1year", step="year", stepmode="backward"),
+                    dict(step="all")
+                ])
+            ),
+            rangeslider=dict(visible=True),type="date"
+        ),height=350
+    )#go.Figure(data=trace)
+    return(fig2)
 
 @app.callback(Output('Broken_dropdown', 'displayed'),
               Input('country-dropdown', 'value'),
@@ -303,7 +471,7 @@ def display_confirm(value3):
         return True
     return False
 
-for id in ["general","graph-info","graphic-info"]:
+for id in ["general","graph-info","graphic-info","Blank1","Blank2","Blank3"]:
 
     @app.callback(
         [Output(f"{id}-modal", "style"), Output(f"{id}-div", "style")],
@@ -316,6 +484,20 @@ for id in ["general","graph-info","graphic-info"]:
         else:
             return {"display": "none"}, {"zIndex": 0}
 
+@app.callback(
+    Output(f"basic-modal", "style"),
+    Input(f"close-basic-modal", "n_clicks"),
+    prevent_initial_call=True
+)
+def infoDump(clicks):
+    if clicks is None:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
+    #raise PreventUpdate
+
+#figure = world_map(Sdata))
+#html.Img(src = app.get_asset_url('For1.png'), height = "350px", width = "605px")
 
 if __name__ == "__main__":
     app.run_server()
